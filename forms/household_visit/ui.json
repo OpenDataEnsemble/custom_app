@@ -1,0 +1,83 @@
+{
+  "type": "SwipeLayout",
+  "options": {
+    "headerTitle": "Household visit"
+  },
+  "translations": {
+    "pt": {
+      "headerTitle": "Visita ao agregado"
+    }
+  },
+  "elements": [
+    {
+      "type": "VerticalLayout",
+      "elements": [
+        {
+          "type": "Control",
+          "scope": "#/properties/visit_date",
+          "label": "Visit date",
+          "translations": {
+            "pt": { "label": "Data da visita" }
+          }
+        },
+        {
+          "type": "Control",
+          "scope": "#/properties/consent",
+          "label": "Does the household agree to take part?",
+          "options": {
+            "oneOf": [
+              { "const": "1", "title": "Yes" },
+              { "const": "2", "title": "No" }
+            ]
+          },
+          "translations": {
+            "pt": {
+              "label": "O agregado aceita participar?",
+              "options": {
+                "oneOf": [
+                  { "const": "1", "title": "Sim" },
+                  { "const": "2", "title": "Não" }
+                ]
+              }
+            }
+          }
+        },
+        {
+          "type": "Control",
+          "scope": "#/properties/reason_no_consent",
+          "label": "Why not?",
+          "translations": {
+            "pt": { "label": "Porque não?" }
+          },
+          "rule": {
+            "effect": "SHOW",
+            "condition": {
+              "scope": "#/properties/consent",
+              "schema": { "const": "2" }
+            }
+          }
+        }
+      ]
+    },
+    {
+      "type": "VerticalLayout",
+      "rule": {
+        "effect": "SHOW",
+        "condition": {
+          "scope": "#/properties/consent",
+          "schema": { "const": "1" }
+        }
+      },
+      "elements": [
+        {
+          "type": "Control",
+          "scope": "#/properties/household_size",
+          "label": "How many people live in the household?",
+          "translations": {
+            "pt": { "label": "Quantas pessoas vivem no agregado?" }
+          }
+        }
+      ]
+    }
+  ]
+}

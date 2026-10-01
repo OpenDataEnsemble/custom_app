@@ -1,0 +1,54 @@
+:root {
+  font-family: system-ui, sans-serif;
+  color: #212121;
+  background: #fafafa;
+}
+
+body {
+  margin: 0;
+  padding: 1rem;
+}
+
+h1 {
+  font-size: 1.4rem;
+}
+
+.forms {
+  list-style: none;
+  padding: 0;
+  display: grid;
+  gap: 0.5rem;
+}
+
+.forms li {
+  display: flex;
+  align-items: center;
+  gap: 0.75rem;
+  padding: 0.75rem;
+  background: #fff;
+  border-radius: 8px;
+  box-shadow: 0 1px 2px rgb(0 0 0 / 12%);
+}
+
+.forms .name {
+  flex: 1;
+  font-weight: 600;
+}
+
+.forms .count {
+  color: #616161;
+  font-size: 0.9rem;
+}
+
+button {
+  padding: 0.5rem 1rem;
+  border: 0;
+  border-radius: 6px;
+  background: #1565c0;
+  color: #fff;
+  font-size: 1rem;
+}
+
+.message {
+  color: #616161;
+}

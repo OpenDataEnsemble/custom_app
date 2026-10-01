@@ -1,0 +1,37 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "title": "Household visit",
+  "version": "1",
+  "type": "object",
+  "$defs": {
+    "yes_no": {
+      "oneOf": [
+        { "const": "1", "title": "Yes" },
+        { "const": "2", "title": "No" }
+      ]
+    }
+  },
+  "properties": {
+    "visit_date": {
+      "type": "string",
+      "format": "date",
+      "title": "Visit date"
+    },
+    "consent": {
+      "$ref": "#/$defs/yes_no",
+      "type": "string",
+      "title": "Does the household agree to take part?"
+    },
+    "reason_no_consent": {
+      "type": "string",
+      "title": "Why not?"
+    },
+    "household_size": {
+      "type": "integer",
+      "minimum": 1,
+      "maximum": 50,
+      "title": "How many people live in the household?"
+    }
+  },
+  "required": ["visit_date", "consent"]
+}
