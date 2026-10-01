@@ -1,6 +1,6 @@
 # ODE custom app template
 
-A minimal, runnable starting point for a **custom app** on the [Open Data Ensemble (ODE)](https://opendataensemble.org/) platform. It includes an example form with skip logic and translations, and context documents for AI assistants and developers.
+A minimal, runnable starting point for a **custom app** on the [Open Data Ensemble (ODE)](https://opendataensemble.org/) platform. It includes the example form `my_first_form` with skip logic and translations, and context documents for AI assistants and developers.
 
 ---
 

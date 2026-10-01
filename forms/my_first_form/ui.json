@@ -1,11 +1,11 @@
 {
   "type": "SwipeLayout",
   "options": {
-    "headerTitle": "Household visit"
+    "headerTitle": "My first form"
   },
   "translations": {
     "pt": {
-      "headerTitle": "Visita ao agregado"
+      "headerTitle": "Meu primeiro formulário"
     }
   },
   "elements": [
@@ -36,7 +36,7 @@
               "options": {
                 "oneOf": [
                   { "const": "1", "title": "Sim" },
-                  { "const": "2", "title": "Não" }
+                  { "const": "2", "title": "NÃ£o" }
                 ]
               }
             }
@@ -47,7 +47,7 @@
           "scope": "#/properties/reason_no_consent",
           "label": "Why not?",
           "translations": {
-            "pt": { "label": "Porque não?" }
+            "pt": { "label": "Porque nÃ£o?" }
           },
           "rule": {
             "effect": "SHOW",

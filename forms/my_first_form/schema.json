@@ -1,6 +1,6 @@
 {
   "$schema": "http://json-schema.org/draft-07/schema#",
-  "title": "Household visit",
+  "title": "My first form",
   "version": "1",
   "type": "object",
   "$defs": {

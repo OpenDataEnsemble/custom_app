@@ -1,87 +1,144 @@
-# Custom applications for ODE — AI assistant guide
+# ODE custom app — agent guide
 
-**Audience:** This file is for **AI coding assistants** and **human developers** building **custom apps** for [Formulus](https://opendataensemble.org/docs/reference/formulus). It assumes **no** local clone of the ODE monorepo or private example apps.
+Use this file when modifying this repository. It is for AI coding assistants and human developers building a custom app for [Open Data Ensemble (ODE)](https://opendataensemble.org/).
 
----
+## Start here
 
-## This project
+This is a runnable custom app template. It does not require an ODE monorepo checkout.
 
-This repository was created from the ODE custom app template. It is a runnable app:
+| Path | Purpose |
+| --- | --- |
+| `forms/<form_type>/` | Form definitions: `schema.json` and `ui.json`. The folder name is the stable form type. Edit these files. |
+| `src/`, `index.html` | Custom app code. Edit these files. |
+| `public/formulus-load.js` | Loads the host-provided Formulus bridge. Keep it as a classic script. |
+| `dist/` | Complete build output loaded by ODE Desktop and published to devices. Never edit it directly. |
+| `CONTEXT_*.md` | More detailed offline notes about forms, the bridge API, and bundles. |
 
-| Path                 | Role                                                                                       |
-| -------------------- | ------------------------------------------------------------------------------------------ |
-| `forms/<form_type>/` | `schema.json` + `ui.json` per form; the folder name is the form type. **Edit here.**      |
-| `src/`, `index.html` | App code (plain JavaScript + Vite). **Edit here.**                                         |
-| `public/`            | Copied to `dist/` unchanged; `formulus-load.js` provides `window.getFormulus()`.           |
-| `dist/`              | Build output that ODE Desktop loads and publishes. **Never edit; rebuild instead.**        |
+Typical workflow:
 
-### Workflow
+1. Understand the requested change and inspect the relevant source files.
+2. Edit `forms/` and/or `src/`. Never edit `dist/`.
+3. Bump a changed form's top-level `version` in `schema.json`.
+4. Run `npm run build`.
+5. Run `ode forms validate dist/forms` and fix every error.
+6. Refresh developer mode with `ode app dev on --profile <id>`, then ask the user to preview the app or form in ODE Desktop.
+7. Run `ode app push --profile <id>` for a dry run. Publish only after explicit user confirmation and only when the profile grants push access.
 
-1. Edit `forms/` or `src/`.
-2. For form changes:
-   - Bump the form's top-level `"version"` in `schema.json`.
-   - Never rename or delete fields that may already have data, and never reuse a choice code with a new meaning.
-3. Build with `npm run build` (Node.js 22.12+ or 20.19+; run `npm install` once first).
-4. Validate with `ode forms validate dist/forms` and fix every error. `ode` ships with ODE Desktop. Run `ode --help` for all commands, and `ode skills show ode-edit-form` for the full edit → preview → publish workflow.
-5. Preview: ODE Desktop developer mode points at `dist/`. Run `ode app dev on --profile <id>`, or ask the user to press **Refresh app** in Desktop.
-6. Publish only after the user explicitly confirms (`ode app push`).
+For guided workflows, run `ode skills list`, `ode skills show ode-edit-form`, or `ode skills show ode-new-project`.
 
-The example form `forms/household_visit/` shows the basics:
+## How ODE fits together
 
-- coded choices (`$defs` + `oneOf`);
-- skip logic on a question and on a whole page (`rule` with `SHOW`);
-- Portuguese translations (`translations` in `ui.json`, including choice labels via `options.oneOf`).
+```text
+Custom app (this repository, HTML/JS/CSS)
+  └─ runs in a WebView hosted by Formulus
+       ├─ calls the injected Formulus JavaScript bridge
+       └─ opens Formplayer for schema-driven forms
+            └─ reads forms/<form_type>/{schema.json,ui.json}
 
----
+ODE Desktop
+  ├─ previews the custom app and forms
+  ├─ manages profiles, developer mode, exports, and agent permissions
+  └─ builds/publishes the app bundle
 
-## Official references (use these in answers)
+Synkronus
+  ├─ distributes app bundles and forms
+  └─ synchronizes observations and attachments
+```
 
-- **Documentation:** [https://opendataensemble.org/docs/](https://opendataensemble.org/docs/)
-- **Formulus ↔ WebView API (source of truth):** [FormulusInterfaceDefinition.ts](https://github.com/OpenDataEnsemble/ode/blob/main/formulus/src/webview/FormulusInterfaceDefinition.ts) in the `OpenDataEnsemble/ode` repository.
-- **JSON Forms (upstream standard):** [jsonforms.io](https://jsonforms.io/). Use it together with the ODE-specific rules in [Form specifications](https://opendataensemble.org/docs/reference/form-specifications).
+- **Formulus** is the offline-first mobile host. It owns profiles, native device capabilities, observation storage, attachments, and synchronization.
+- **Formplayer** is the schema-driven form UI hosted inside Formulus or ODE Desktop. A custom app normally launches it with `openFormplayer()` rather than implementing form rendering itself.
+- **A custom app** is navigation and project-specific workflow around forms. It runs inside Formulus and accesses native functionality only through the public bridge.
+- **ODE Desktop** is the local workbench and the authority for agent permissions. Developer mode mirrors this project's `dist/` folder for previewing.
+- **Synkronus** is the shared server. Collection remains usable offline; synchronization happens when connectivity is available.
 
-Don't cite paths on the user's disk, `../`, or unpublished repos. Prefer **opendataensemble.org** and **github.com/OpenDataEnsemble** links.
+Observations and attachment binaries are managed by the host, not by this app's browser storage. Do not invent direct SQLite, filesystem, or Synkronus access from the WebView.
 
----
+## Forms and Formplayer
 
-## What you are building
+Each `forms/<form_type>/` directory contains:
 
-A **custom app** is deployed as an **app bundle** (zip) and runs in a **WebView** inside Formulus. The runtime contract is **static web assets** (HTML, JS, CSS) plus **form definitions** (JSON), not a particular SPA framework.
+- `schema.json`: JSON Schema draft-07 data shape, validation, field titles, coded choices, and a top-level `version`.
+- `ui.json`: UI order, pages/groups, labels, translations, controls, and JSON Forms rules.
 
-### Stack freedom
+The example `forms/my_first_form/` demonstrates coded choices, required fields, Portuguese translations, and question/page-level skip logic.
 
-Authors may use **plain HTML**, **Vite**, **React**, **Vue**, **Svelte**, or any other toolchain, **if** the **production output** can be packaged as required by the [app bundle format](https://opendataensemble.org/docs/reference/app-bundle-format). This template uses plain JavaScript and Vite; replacing `src/` with a framework is fine.
+Rules and compatibility:
 
-Keep these when you do:
+- Treat the form type and existing field names/choice codes as durable data contracts.
+- Never rename or remove a field that may have collected data, and never reuse a choice code with a different meaning. Add a new field/code instead.
+- Bump `version` whenever a form changes.
+- Keep UI `scope` values aligned with schema properties.
+- Implement skip logic with JSON Forms `rule` objects. A condition uses a field `scope` and JSON Schema such as `{ "const": "1" }`.
+- Do not make conditionally hidden questions required.
+- Update every locale when changing user-facing text.
+- A `linkedForm` must refer to another form included in the bundle.
+- Use only ODE-documented formats and controls; upstream JSON Forms features are not automatically supported.
 
-- `base: './'`, so URLs are relative.
-- `formulus-load.js` loaded as a classic script.
-- The forms copy into `dist/forms`.
+Canonical references:
 
----
+- [Form specifications](https://opendataensemble.org/docs/reference/form-specifications)
+- [Form design](https://opendataensemble.org/docs/guides/form-design)
+- [Custom extensions](https://opendataensemble.org/docs/guides/custom-extensions)
+- [JSON Forms](https://jsonforms.io/), subject to ODE's documented profile
 
-## What to do
+## Formulus bridge
 
-- Follow **[Form specifications](https://opendataensemble.org/docs/reference/form-specifications)** for `schema.json` / `ui.json` (JSON Schema draft-07 and ODE UI rules).
-- Load the **Formulus** API via the documented **`formulus-load.js`** / **`getFormulus()`** pattern (see [App bundle format](https://opendataensemble.org/docs/reference/app-bundle-format) and related guides).
-- Use the **CONTEXT_*.md** files in this repo for condensed rules: [CONTEXT_ODE_FORMS.md](CONTEXT_ODE_FORMS.md), [CONTEXT_FORMULUS_API.md](CONTEXT_FORMULUS_API.md), and [CONTEXT_BUNDLE_AND_CI.md](CONTEXT_BUNDLE_AND_CI.md).
-- For **extensions** (custom renderers, functions), see [Custom extensions](https://opendataensemble.org/docs/guides/custom-extensions).
+Load `public/formulus-load.js` from `index.html`, then acquire the bridge asynchronously:
 
----
+```js
+const formulus = await window.getFormulus();
+```
 
-## What not to do
+The bridge is available only inside Formulus or ODE Desktop. Browser development should degrade gracefully when `getFormulus()` cannot connect.
 
-- Do **not** edit the **Formulus** React Native app, the **Synkronus** server, or **formplayer** unless the user explicitly asked for **platform** development work in a **repository that contains that code**.
-- Do **not** invent Synkronus or Formulus APIs that are not in the official **interface definition** or public docs.
-- Do **not** assume unsupported JSON Forms features work on ODE. Stay within [Form specifications](https://opendataensemble.org/docs/reference/form-specifications) and test on device.
-- Do **not** edit `dist/`, or ODE Desktop's workspace (`bundles/active`, `bundles/dev-local`).
+Common operations include:
 
----
+| Need | API |
+| --- | --- |
+| Identify the host/profile | `getVersion()`, `getProfileId()` |
+| List and open forms | `getAvailableForms()`, `openFormplayer()` |
+| Read observations | `getObservations()`, `getObservationsByQuery()` |
+| Headless create/update | `persistObservation()` |
+| Profile-scoped browser state | `getLocalStorageRef()` |
+| Attachments and bundle paths | `getAttachmentUri()`, `getAttachmentsUri()`, `getCustomAppUri()`, `getFormSpecsUri()` |
+| Native capture | `requestCamera()`, `requestAudio()`, `requestVideo()`, `requestFile()`, `requestLocation()`, `requestQrcode()` |
+| Connectivity and sync | `getConnectivityStatus()`, `sync()`, `getCurrentDataRevisionCount()` |
+| User/theme | `getCurrentUser()`, `getThemeMode()` |
 
-## Related files in this repo
+Important boundaries:
 
-- [README.md](README.md): human overview, quick start, and link index.
-- [CONTEXT_ODE_FORMS.md](CONTEXT_ODE_FORMS.md): forms and UI schema profile.
-- [CONTEXT_FORMULUS_API.md](CONTEXT_FORMULUS_API.md): injected API summary (versioned).
-- [CONTEXT_BUNDLE_AND_CI.md](CONTEXT_BUNDLE_AND_CI.md): bundles and CLI.
-- [examples/README.md](examples/README.md): public examples (URLs only).
+- Verify exact signatures and result types against the canonical interface before coding. Do not infer APIs from method names.
+- Pass prefill values to `openFormplayer()` under `params.defaultData`; session options such as `skipFinalize` and `skipDraftSelection` belong in its fourth argument.
+- Prefer `openFormplayer()` for user-entered data. Use `persistObservation()` only when the app intentionally performs a validated headless write.
+- Attachment values persisted in observations are host-managed basenames/metadata. Resolve display URLs with `getAttachmentUri()`; do not persist temporary URIs.
+- The app is offline-first. Treat connectivity as optional and handle bridge rejections without losing user work.
+
+Canonical source of truth:
+
+- [`FormulusInterfaceDefinition.ts`](https://github.com/OpenDataEnsemble/ode/blob/main/formulus/src/webview/FormulusInterfaceDefinition.ts)
+- [Formplayer contract](https://opendataensemble.org/docs/reference/formplayer-contract)
+- [Custom applications](https://opendataensemble.org/docs/guides/custom-applications)
+
+`CONTEXT_FORMULUS_API.md` is a convenience summary, not the contract. When it disagrees with the TypeScript interface, follow the interface.
+
+## Build and bundle constraints
+
+This template uses plain JavaScript and Vite, but another framework is fine if the production output remains a valid ODE app bundle.
+
+Keep these invariants:
+
+- `npm run build` produces a self-contained `dist/` with `index.html`, assets, `formulus-load.js`, and `forms/`.
+- Vite uses `base: './'` so assets work from a WebView file URL.
+- Never hand-edit generated files in `dist/`.
+- Never edit ODE Desktop's managed `bundles/active` or `bundles/dev-local` folders.
+- Never expose credentials or add direct authenticated Synkronus calls when the bridge or ODE tooling provides the operation.
+
+See [App bundle format](https://opendataensemble.org/docs/reference/app-bundle-format) and `CONTEXT_BUNDLE_AND_CI.md`.
+
+## Scope and safety
+
+- Make focused changes consistent with the existing plain-JavaScript scaffold.
+- Do not modify Formulus, Formplayer, Synkronus, or ODE Desktop unless the user explicitly asks for platform work in the corresponding repository.
+- Do not publish an app bundle without explicit confirmation. Publishing reaches devices on their next sync.
+- Do not send observations or attachments to remote services without explicit authorization.
+- Prefer public links on `opendataensemble.org` and `github.com/OpenDataEnsemble`; do not cite paths on the user's machine.
